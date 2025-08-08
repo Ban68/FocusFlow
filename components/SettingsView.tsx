@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { Settings } from '../types';
 import { DEFAULT_SETTINGS } from '../constants';
@@ -27,12 +26,11 @@ const SettingsInput: React.FC<{
   );
 };
 
-
 const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings }) => {
   const handleReset = () => {
-      setSettings(DEFAULT_SETTINGS);
+    setSettings(DEFAULT_SETTINGS);
   };
-    
+
   return (
     <div className="max-w-md mx-auto p-8 bg-slate-800/50 rounded-2xl border border-slate-700/50">
       <h2 className="text-2xl font-bold text-white mb-6">Settings</h2>
@@ -57,12 +55,25 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings }) =>
           value={settings.pomodorosPerSet}
           onChange={(val) => setSettings({ ...settings, pomodorosPerSet: val })}
         />
+
         <button
-            onClick={handleReset}
-            className="w-full text-center text-slate-400 hover:text-white hover:bg-slate-700 p-3 rounded-lg transition-colors"
+          onClick={handleReset}
+          className="w-full text-center text-slate-400 hover:text-white hover:bg-slate-700 p-3 rounded-lg transition-colors"
         >
-            Reset to Defaults
+          Reset to Defaults
         </button>
+
+        {/* ---- Privacy link ---- */}
+        <div className="mt-6 text-xs opacity-70">
+          <a
+            href="/privacy.html"
+            target="_blank"
+            rel="noopener"
+            className="underline"
+          >
+            Política de privacidad
+          </a>
+        </div>
       </div>
     </div>
   );
