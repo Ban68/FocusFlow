@@ -1,0 +1,5 @@
+{
+  "name": "FocusFlow",
+  "description": "A productivity and time management application based on the Pomodoro Technique, designed to enhance focus, reduce procrastination, and provide flexible, goal-oriented work sessions. It features customizable timers, task management, progress tracking, and AI-powered break suggestions.",
+  "requestFramePermissions": []
+}
