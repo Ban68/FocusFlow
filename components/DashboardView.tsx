@@ -51,13 +51,16 @@ const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, addSessi
       setPomodorosInSet(newPomodorosInSet);
       if (newPomodorosInSet % settings.pomodorosPerSet === 0) {
         setTimerMode(TimerMode.LONG_BREAK);
+        if (settings.soundOnComplete) {
+            new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3').play();
+        }
       } else {
         setTimerMode(TimerMode.SHORT_BREAK);
       }
     } else {
       setTimerMode(TimerMode.WORK);
     }
-  }, [addSession, timerMode, activeTaskId, completePomodoroForTask, pomodorosInSet, settings.pomodorosPerSet]);
+  }, [addSession, timerMode, activeTaskId, completePomodoroForTask, pomodorosInSet, settings]);
 
   useEffect(() => {
     if (!activeTaskId && todayTasks.length > 0) {
@@ -114,3 +117,4 @@ const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, addSessi
 };
 
 export default DashboardView;
+
