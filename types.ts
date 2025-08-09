@@ -39,4 +39,5 @@ export interface Settings {
   shortBreakDuration: number;
   longBreakDuration: number;
   pomodorosPerSet: number;
-  soundOnComplete: Boolean;
+  soundOnComplete: boolean;
+}
