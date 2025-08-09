@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { TimerMode, Settings } from '../types';
 import { TimerMode as TimerModeEnum, TimerStatus } from '../types';
@@ -76,7 +75,9 @@ const Timer: React.FC<TimerProps> = ({ settings, onSessionComplete, timerMode, s
       if (secondsLeft <= 0) {
         setTimerStatus(TimerStatus.STOPPED);
         onSessionComplete(totalSeconds / 60, true);
-        new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3').play();
+        if (settings.soundOnComplete) {
+            new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3').play();
+        }
       }
       return;
     }
@@ -86,7 +87,7 @@ const Timer: React.FC<TimerProps> = ({ settings, onSessionComplete, timerMode, s
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timerStatus, secondsLeft, onSessionComplete, totalSeconds]);
+  }, [timerStatus, secondsLeft, onSessionComplete, totalSeconds, settings.soundOnComplete]);
   
   const toggleTimer = () => {
     setTimerStatus(prev => prev === TimerStatus.RUNNING ? TimerStatus.PAUSED : TimerStatus.RUNNING);
