@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import type { Screen, Task, Session, Settings } from './types';
-import { Screen as ScreenEnum } from './types';
+import type { Screen, Task, Session, Settings, TimerMode, TimerStatus } from './types';
+import { Screen as ScreenEnum, TimerMode as TimerModeEnum, TimerStatus as TimerStatusEnum } from './types';
 import { DEFAULT_SETTINGS } from './constants';
 import Header from './components/Header';
 import DashboardView from './components/DashboardView';
@@ -24,6 +24,29 @@ const App: React.FC = () => {
     return savedSettings ? JSON.parse(savedSettings) : DEFAULT_SETTINGS;
   });
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+
+  // Timer state lifted up to App.tsx
+  const [timerMode, setTimerMode] = useState<TimerMode>(TimerModeEnum.WORK);
+  const [pomodorosInSet, setPomodorosInSet] = useState(0);
+  const getDuration = useCallback((mode: TimerMode) => {
+    switch (mode) {
+      case TimerModeEnum.WORK: return settings.workDuration * 60;
+      case TimerModeEnum.SHORT_BREAK: return settings.shortBreakDuration * 60;
+      case TimerModeEnum.LONG_BREAK: return settings.longBreakDuration * 60;
+      default: return settings.workDuration * 60;
+    }
+  }, [settings]);
+  const [totalSeconds, setTotalSeconds] = useState(getDuration(timerMode));
+  const [secondsLeft, setSecondsLeft] = useState(getDuration(timerMode));
+  const [timerStatus, setTimerStatus] = useState<TimerStatus>(TimerStatusEnum.STOPPED);
+
+  useEffect(() => {
+    const newTotalSeconds = getDuration(timerMode);
+    setTotalSeconds(newTotalSeconds);
+    setSecondsLeft(newTotalSeconds);
+    // Do not reset timerStatus here, it should be controlled by user actions
+  }, [timerMode, getDuration]);
+
 
   useEffect(() => {
     const unlockAudio = () => {
@@ -97,6 +120,16 @@ const App: React.FC = () => {
             activeTaskId={activeTaskId}
             setActiveTaskId={setActiveTaskId}
             completePomodoroForTask={completePomodoroForTask}
+            timerMode={timerMode}
+            setTimerMode={setTimerMode}
+            pomodorosInSet={pomodorosInSet}
+            setPomodorosInSet={setPomodorosInSet}
+            totalSeconds={totalSeconds}
+            setTotalSeconds={setTotalSeconds}
+            secondsLeft={secondsLeft}
+            setSecondsLeft={setSecondsLeft}
+            timerStatus={timerStatus}
+            setTimerStatus={setTimerStatus}
           />
         );
     }

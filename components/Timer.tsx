@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import type { TimerMode, Settings } from '../types';
-import { TimerMode as TimerModeEnum, TimerStatus } from '../types';
+import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react';
+import type { TimerMode, Settings, TimerStatus } from '../types';
+import { TimerMode as TimerModeEnum, TimerStatus as TimerStatusEnum } from '../types';
 import { ICONS } from '../constants';
 import InterruptionModal from './InterruptionModal';
 
@@ -10,6 +10,12 @@ interface TimerProps {
   timerMode: TimerMode;
   setTimerMode: (mode: TimerMode) => void;
   pomodorosInSet: number;
+  totalSeconds: number;
+  setTotalSeconds: (seconds: number) => void;
+  secondsLeft: number;
+  setSecondsLeft: (seconds: number) => void;
+  timerStatus: TimerStatus;
+  setTimerStatus: (status: TimerStatus) => void;
 }
 
 const CircularProgress: React.FC<{ progress: number; children: React.ReactNode }> = ({ progress, children }) => {
@@ -48,35 +54,16 @@ const CircularProgress: React.FC<{ progress: number; children: React.ReactNode }
 };
 
 
-const Timer: React.FC<TimerProps> = ({ settings, onSessionComplete, timerMode, setTimerMode, pomodorosInSet }) => {
-  const getDuration = useCallback((mode: TimerMode) => {
-    switch (mode) {
-      case TimerModeEnum.WORK: return settings.workDuration * 60;
-      case TimerModeEnum.SHORT_BREAK: return settings.shortBreakDuration * 60;
-      case TimerModeEnum.LONG_BREAK: return settings.longBreakDuration * 60;
-      default: return settings.workDuration * 60;
-    }
-  }, [settings]);
-
-  const [totalSeconds, setTotalSeconds] = useState(getDuration(timerMode));
-  const [secondsLeft, setSecondsLeft] = useState(getDuration(timerMode));
-  const [timerStatus, setTimerStatus] = useState<TimerStatus>(TimerStatus.STOPPED);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const Timer: React.FC<TimerProps> = ({ settings, onSessionComplete, timerMode, setTimerMode, pomodorosInSet, totalSeconds, setTotalSeconds, secondsLeft, setSecondsLeft, timerStatus, setTimerStatus }) => {
   const shouldAutoStart = useRef(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // This useEffect now only handles the timer interval and completion logic
   useEffect(() => {
-    const newTotalSeconds = getDuration(timerMode);
-    setTotalSeconds(newTotalSeconds);
-    setSecondsLeft(newTotalSeconds);
-    setTimerStatus(shouldAutoStart.current ? TimerStatus.RUNNING : TimerStatus.STOPPED);
-    shouldAutoStart.current = false;
-  }, [timerMode, getDuration]);
-
-  useEffect(() => {
-    if (timerStatus !== TimerStatus.RUNNING) return;
+    if (timerStatus !== TimerStatusEnum.RUNNING) return;
 
     if (secondsLeft <= 0) {
-      setTimerStatus(TimerStatus.STOPPED);
+      setTimerStatus(TimerStatusEnum.STOPPED);
       onSessionComplete(totalSeconds / 60, true);
       if (settings.soundOnComplete) {
           new Audio('https://orangefreesounds.com/wp-content/uploads/2025/08/Clean-and-sharp-metal-ding-sound-effect.mp3').play().catch(error => {
@@ -92,28 +79,40 @@ const Timer: React.FC<TimerProps> = ({ settings, onSessionComplete, timerMode, s
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timerStatus, secondsLeft, onSessionComplete, totalSeconds, settings.soundOnComplete]);
+  }, [timerStatus, secondsLeft, onSessionComplete, totalSeconds, settings.soundOnComplete, setSecondsLeft, setTimerStatus]);
   
   const toggleTimer = () => {
-    setTimerStatus(prev => prev === TimerStatus.RUNNING ? TimerStatus.PAUSED : TimerStatus.RUNNING);
+    setTimerStatus(prev => prev === TimerStatusEnum.RUNNING ? TimerStatusEnum.PAUSED : TimerStatusEnum.RUNNING);
   };
   
   const resetTimer = () => {
-    setTimerStatus(TimerStatus.STOPPED);
-    setSecondsLeft(totalSeconds);
+    setTimerStatus(TimerStatusEnum.STOPPED);
+    // Recalculate totalSeconds based on current timerMode and settings
+    const newTotalSeconds = (() => {
+      switch (timerMode) {
+        case TimerModeEnum.WORK: return settings.workDuration * 60;
+        case TimerModeEnum.SHORT_BREAK: return settings.shortBreakDuration * 60;
+        case TimerModeEnum.LONG_BREAK: return settings.longBreakDuration * 60;
+        default: return settings.workDuration * 60;
+      }
+    })();
+    setTotalSeconds(newTotalSeconds);
+    setSecondsLeft(newTotalSeconds);
   };
 
   const handleVoidPomodoro = (reason: string) => {
     console.log(`Pomodoro voided: ${reason}`);
     onSessionComplete(totalSeconds / 60, false);
     setIsModalOpen(false);
+    // Reset timer after voiding
+    resetTimer();
   };
   
   const extendFlow = () => {
     setSecondsLeft(prev => prev + 5 * 60); // Add 5 minutes
     setTotalSeconds(prev => prev + 5 * 60);
-    if (timerStatus !== TimerStatus.RUNNING) {
-      setTimerStatus(TimerStatus.RUNNING);
+    if (timerStatus !== TimerStatusEnum.RUNNING) {
+      setTimerStatus(TimerStatusEnum.RUNNING);
     }
   };
   
@@ -143,12 +142,12 @@ const Timer: React.FC<TimerProps> = ({ settings, onSessionComplete, timerMode, s
           onClick={() => setIsModalOpen(true)}
           className="p-3 bg-slate-700 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-full transition-colors"
           title="Void Pomodoro"
-          disabled={timerMode !== TimerModeEnum.WORK || timerStatus !== TimerStatus.RUNNING}
+          disabled={timerMode !== TimerModeEnum.WORK || timerStatus !== TimerStatusEnum.RUNNING}
         >
           {ICONS.TRASH}
         </button>
         <button onClick={toggleTimer} className="p-4 bg-cyan-500 text-slate-900 rounded-full hover:bg-cyan-400 transition-colors shadow-lg shadow-cyan-500/20">
-            {timerStatus === TimerStatus.RUNNING ? ICONS.PAUSE : ICONS.PLAY}
+            {timerStatus === TimerStatusEnum.RUNNING ? ICONS.PAUSE : ICONS.PLAY}
         </button>
         <button onClick={resetTimer} className="p-3 bg-slate-700 hover:bg-slate-600 text-slate-400 hover:text-white rounded-full transition-colors" title="Reset Timer">
             {ICONS.RESET}

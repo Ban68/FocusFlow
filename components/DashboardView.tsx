@@ -12,6 +12,16 @@ interface DashboardViewProps {
   activeTaskId: string | null;
   setActiveTaskId: (id: string | null) => void;
   completePomodoroForTask: (taskId: string) => void;
+  timerMode: TimerMode;
+  setTimerMode: (mode: TimerMode) => void;
+  pomodorosInSet: number;
+  setPomodorosInSet: (count: number) => void;
+  totalSeconds: number;
+  setTotalSeconds: (seconds: number) => void;
+  secondsLeft: number;
+  setSecondsLeft: (seconds: number) => void;
+  timerStatus: TimerStatus;
+  setTimerStatus: (status: TimerStatus) => void;
 }
 
 const TaskItem: React.FC<{ task: Task; isActive: boolean; onClick: (id: string) => void }> = ({ task, isActive, onClick }) => (
@@ -29,9 +39,7 @@ const TaskItem: React.FC<{ task: Task; isActive: boolean; onClick: (id: string) 
   </div>
 );
 
-const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, addSession, activeTaskId, setActiveTaskId, completePomodoroForTask }) => {
-  const [timerMode, setTimerMode] = useState<TimerMode>(TimerMode.WORK);
-  const [pomodorosInSet, setPomodorosInSet] = useState(0);
+const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, addSession, activeTaskId, setActiveTaskId, completePomodoroForTask, timerMode, setTimerMode, pomodorosInSet, setPomodorosInSet, totalSeconds, setTotalSeconds, secondsLeft, setSecondsLeft, timerStatus, setTimerStatus }) => {
 
   const activeTask = tasks.find(t => t.id === activeTaskId);
   const todayTasks = tasks.filter(t => t.isToday && !t.completed);
@@ -79,6 +87,12 @@ const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, addSessi
           timerMode={timerMode}
           setTimerMode={setTimerMode}
           pomodorosInSet={pomodorosInSet}
+          totalSeconds={totalSeconds}
+          setTotalSeconds={setTotalSeconds}
+          secondsLeft={secondsLeft}
+          setSecondsLeft={setSecondsLeft}
+          timerStatus={timerStatus}
+          setTimerStatus={setTimerStatus}
         />
         {timerMode !== TimerMode.WORK && <BreakSuggestion />}
       </div>
