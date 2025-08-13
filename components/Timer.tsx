@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { TimerMode, Settings, TimerStatus } from '../types';
 import { TimerMode as TimerModeEnum, TimerStatus as TimerStatusEnum } from '../types';
 import { ICONS } from '../constants';
@@ -55,39 +55,7 @@ const CircularProgress: React.FC<{ progress: number; children: React.ReactNode }
 
 
 const Timer: React.FC<TimerProps> = ({ settings, onSessionComplete, timerMode, setTimerMode, pomodorosInSet, totalSeconds, setTotalSeconds, secondsLeft, setSecondsLeft, timerStatus, setTimerStatus }) => {
-  const shouldAutoStart = useRef(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Automatically start the next session when the mode changes
-  useEffect(() => {
-    if (shouldAutoStart.current) {
-      setTimerStatus(TimerStatusEnum.RUNNING);
-      shouldAutoStart.current = false;
-    }
-  }, [timerMode, setTimerStatus]);
-
-  // This useEffect now only handles the timer interval and completion logic
-  useEffect(() => {
-    if (timerStatus !== TimerStatusEnum.RUNNING) return;
-
-    if (secondsLeft <= 0) {
-      setTimerStatus(TimerStatusEnum.STOPPED);
-      onSessionComplete(totalSeconds / 60, true);
-      if (settings.soundOnComplete) {
-          new Audio('https://orangefreesounds.com/wp-content/uploads/2025/08/Clean-and-sharp-metal-ding-sound-effect.mp3').play().catch(error => {
-              console.error("Failed to play sound:", error);
-          });
-      }
-      shouldAutoStart.current = true;
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setSecondsLeft(prev => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timerStatus, secondsLeft, onSessionComplete, totalSeconds, settings.soundOnComplete, setSecondsLeft, setTimerStatus]);
   
   const toggleTimer = () => {
     setTimerStatus(prev => prev === TimerStatusEnum.RUNNING ? TimerStatusEnum.PAUSED : TimerStatusEnum.RUNNING);

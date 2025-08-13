@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import type { Task, Settings, Session, TimerStatus } from '../types';
+import React, { useState, useEffect } from 'react';
+import type { Task, Settings, TimerStatus } from '../types';
 import { TimerMode } from '../types';
 import Timer from './Timer';
 import BreakSuggestion from './BreakSuggestion';
@@ -8,20 +8,18 @@ import BreakSuggestion from './BreakSuggestion';
 interface DashboardViewProps {
   tasks: Task[];
   settings: Settings;
-  addSession: (session: Omit<Session, 'id'>) => void;
   activeTaskId: string | null;
   setActiveTaskId: (id: string | null) => void;
-  completePomodoroForTask: (taskId: string) => void;
   timerMode: TimerMode;
   setTimerMode: (mode: TimerMode) => void;
   pomodorosInSet: number;
-  setPomodorosInSet: (count: number) => void;
   totalSeconds: number;
   setTotalSeconds: (seconds: number) => void;
   secondsLeft: number;
   setSecondsLeft: (seconds: number) => void;
   timerStatus: TimerStatus;
   setTimerStatus: (status: TimerStatus) => void;
+  onSessionComplete: (duration: number, isCompleted: boolean) => void;
 }
 
 const TaskItem: React.FC<{ task: Task; isActive: boolean; onClick: (id: string) => void }> = ({ task, isActive, onClick }) => (
@@ -39,38 +37,10 @@ const TaskItem: React.FC<{ task: Task; isActive: boolean; onClick: (id: string) 
   </div>
 );
 
-const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, addSession, activeTaskId, setActiveTaskId, completePomodoroForTask, timerMode, setTimerMode, pomodorosInSet, setPomodorosInSet, totalSeconds, setTotalSeconds, secondsLeft, setSecondsLeft, timerStatus, setTimerStatus }) => {
+const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, activeTaskId, setActiveTaskId, timerMode, setTimerMode, pomodorosInSet, totalSeconds, setTotalSeconds, secondsLeft, setSecondsLeft, timerStatus, setTimerStatus, onSessionComplete }) => {
 
   const activeTask = tasks.find(t => t.id === activeTaskId);
   const todayTasks = tasks.filter(t => t.isToday && !t.completed);
-
-  const handleSessionComplete = useCallback((duration: number, isCompleted: boolean) => {
-    addSession({
-      date: new Date().toISOString().split('T')[0],
-      duration: duration,
-      isCompleted: isCompleted,
-    });
-
-    if (timerMode === TimerMode.WORK && isCompleted) {
-      if (activeTaskId) {
-        completePomodoroForTask(activeTaskId);
-      }
-      const newPomodorosInSet = pomodorosInSet + 1;
-      setPomodorosInSet(newPomodorosInSet);
-      if (newPomodorosInSet % settings.pomodorosPerSet === 0) {
-        setTimerMode(TimerMode.LONG_BREAK);
-        if (settings.soundOnComplete) {
-            new Audio('https://orangefreesounds.com/wp-content/uploads/2025/08/Soft-and-soothing-bell-chime-sound-effect.mp3').play().catch(error => {
-                console.error("Failed to play sound:", error);
-            });
-        }
-      } else {
-        setTimerMode(TimerMode.SHORT_BREAK);
-      }
-    } else {
-      setTimerMode(TimerMode.WORK);
-    }
-  }, [addSession, timerMode, activeTaskId, completePomodoroForTask, pomodorosInSet, settings]);
 
   useEffect(() => {
     if (!activeTaskId && todayTasks.length > 0) {
@@ -83,7 +53,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, addSessi
       <div className="md:col-span-2">
         <Timer
           settings={settings}
-          onSessionComplete={handleSessionComplete}
+          onSessionComplete={onSessionComplete}
           timerMode={timerMode}
           setTimerMode={setTimerMode}
           pomodorosInSet={pomodorosInSet}

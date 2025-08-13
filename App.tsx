@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Screen, Task, Session, Settings, TimerMode, TimerStatus } from './types';
 import { Screen as ScreenEnum, TimerMode as TimerModeEnum, TimerStatus as TimerStatusEnum } from './types';
 import { DEFAULT_SETTINGS } from './constants';
@@ -28,6 +28,7 @@ const App: React.FC = () => {
   // Timer state lifted up to App.tsx
   const [timerMode, setTimerMode] = useState<TimerMode>(TimerModeEnum.WORK);
   const [pomodorosInSet, setPomodorosInSet] = useState(0);
+  const shouldAutoStart = useRef(false);
   const getDuration = useCallback((mode: TimerMode) => {
     switch (mode) {
       case TimerModeEnum.WORK: return settings.workDuration * 60;
@@ -46,6 +47,14 @@ const App: React.FC = () => {
     setSecondsLeft(newTotalSeconds);
     // Do not reset timerStatus here, it should be controlled by user actions
   }, [timerMode, getDuration]);
+
+  useEffect(() => {
+    if (shouldAutoStart.current) {
+      setTimerStatus(TimerStatusEnum.RUNNING);
+      shouldAutoStart.current = false;
+    }
+  }, [timerMode]);
+
 
 
   useEffect(() => {
@@ -102,6 +111,60 @@ const App: React.FC = () => {
       }));
   }, []);
 
+  const handleSessionComplete = useCallback((duration: number, isCompleted: boolean) => {
+    addSession({
+      date: new Date().toISOString().split('T')[0],
+      duration: duration,
+      isCompleted: isCompleted,
+    });
+
+    if (timerMode === TimerModeEnum.WORK && isCompleted) {
+      if (activeTaskId) {
+        completePomodoroForTask(activeTaskId);
+      }
+      const newPomodorosInSet = pomodorosInSet + 1;
+      setPomodorosInSet(newPomodorosInSet);
+      if (newPomodorosInSet % settings.pomodorosPerSet === 0) {
+        setTimerMode(TimerModeEnum.LONG_BREAK);
+        if (settings.soundOnComplete) {
+          new Audio('https://orangefreesounds.com/wp-content/uploads/2025/08/Soft-and-soothing-bell-chime-sound-effect.mp3')
+            .play()
+            .catch(error => {
+              console.error('Failed to play sound:', error);
+            });
+        }
+      } else {
+        setTimerMode(TimerModeEnum.SHORT_BREAK);
+      }
+    } else {
+      setTimerMode(TimerModeEnum.WORK);
+    }
+  }, [addSession, timerMode, activeTaskId, completePomodoroForTask, pomodorosInSet, settings, setTimerMode, setPomodorosInSet]);
+
+  useEffect(() => {
+    if (timerStatus !== TimerStatusEnum.RUNNING) return;
+
+    if (secondsLeft <= 0) {
+      setTimerStatus(TimerStatusEnum.STOPPED);
+      handleSessionComplete(totalSeconds / 60, true);
+      if (settings.soundOnComplete) {
+        new Audio('https://orangefreesounds.com/wp-content/uploads/2025/08/Clean-and-sharp-metal-ding-sound-effect.mp3')
+          .play()
+          .catch(error => {
+            console.error('Failed to play sound:', error);
+          });
+      }
+      shouldAutoStart.current = true;
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setSecondsLeft(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timerStatus, secondsLeft, totalSeconds, settings.soundOnComplete, handleSessionComplete]);
+
   const renderScreen = () => {
     switch (activeScreen) {
       case ScreenEnum.TASKS:
@@ -116,20 +179,18 @@ const App: React.FC = () => {
           <DashboardView
             tasks={tasks}
             settings={settings}
-            addSession={addSession}
             activeTaskId={activeTaskId}
             setActiveTaskId={setActiveTaskId}
-            completePomodoroForTask={completePomodoroForTask}
             timerMode={timerMode}
             setTimerMode={setTimerMode}
             pomodorosInSet={pomodorosInSet}
-            setPomodorosInSet={setPomodorosInSet}
             totalSeconds={totalSeconds}
             setTotalSeconds={setTotalSeconds}
             secondsLeft={secondsLeft}
             setSecondsLeft={setSecondsLeft}
             timerStatus={timerStatus}
             setTimerStatus={setTimerStatus}
+            onSessionComplete={handleSessionComplete}
           />
         );
     }
