@@ -26,6 +26,23 @@ const App: React.FC = () => {
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
 
   useEffect(() => {
+    const unlockAudio = () => {
+      const audio = new Audio();
+      audio.play().catch(error => console.error("Error unlocking audio context:", error));
+      document.removeEventListener('mousedown', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    };
+
+    document.addEventListener('mousedown', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
+
+    return () => {
+      document.removeEventListener('mousedown', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    };
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem('focusflow_tasks', JSON.stringify(tasks));
   }, [tasks]);
 
