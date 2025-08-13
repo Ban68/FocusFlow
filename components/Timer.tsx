@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { TimerMode, Settings } from '../types';
 import { TimerMode as TimerModeEnum, TimerStatus } from '../types';
 import { ICONS } from '../constants';
@@ -62,12 +62,14 @@ const Timer: React.FC<TimerProps> = ({ settings, onSessionComplete, timerMode, s
   const [secondsLeft, setSecondsLeft] = useState(getDuration(timerMode));
   const [timerStatus, setTimerStatus] = useState<TimerStatus>(TimerStatus.STOPPED);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const shouldAutoStart = useRef(false);
 
   useEffect(() => {
     const newTotalSeconds = getDuration(timerMode);
     setTotalSeconds(newTotalSeconds);
     setSecondsLeft(newTotalSeconds);
-    setTimerStatus(TimerStatus.STOPPED);
+    setTimerStatus(shouldAutoStart.current ? TimerStatus.RUNNING : TimerStatus.STOPPED);
+    shouldAutoStart.current = false;
   }, [timerMode, getDuration]);
 
   useEffect(() => {
@@ -80,6 +82,7 @@ const Timer: React.FC<TimerProps> = ({ settings, onSessionComplete, timerMode, s
                 console.error("Failed to play sound:", error);
             });
         }
+        shouldAutoStart.current = true;
       }
       return;
     }
