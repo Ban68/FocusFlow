@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { TimerMode, Settings, TimerStatus } from '../types';
 import { TimerMode as TimerModeEnum, TimerStatus as TimerStatusEnum } from '../types';
 import { ICONS } from '../constants';
@@ -57,6 +57,14 @@ const CircularProgress: React.FC<{ progress: number; children: React.ReactNode }
 const Timer: React.FC<TimerProps> = ({ settings, onSessionComplete, timerMode, setTimerMode, pomodorosInSet, totalSeconds, setTotalSeconds, secondsLeft, setSecondsLeft, timerStatus, setTimerStatus }) => {
   const shouldAutoStart = useRef(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Automatically start the next session when the mode changes
+  useEffect(() => {
+    if (shouldAutoStart.current) {
+      setTimerStatus(TimerStatusEnum.RUNNING);
+      shouldAutoStart.current = false;
+    }
+  }, [timerMode, setTimerStatus]);
 
   // This useEffect now only handles the timer interval and completion logic
   useEffect(() => {
