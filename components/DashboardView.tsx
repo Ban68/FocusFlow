@@ -52,7 +52,9 @@ const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, addSessi
       if (newPomodorosInSet % settings.pomodorosPerSet === 0) {
         setTimerMode(TimerMode.LONG_BREAK);
         if (settings.soundOnComplete) {
-            new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3').play();
+            new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3').play().catch(error => {
+                console.error("Failed to play sound:", error);
+            });
         }
       } else {
         setTimerMode(TimerMode.SHORT_BREAK);

@@ -76,7 +76,9 @@ const Timer: React.FC<TimerProps> = ({ settings, onSessionComplete, timerMode, s
         setTimerStatus(TimerStatus.STOPPED);
         onSessionComplete(totalSeconds / 60, true);
         if (settings.soundOnComplete) {
-            new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3').play();
+            new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3').play().catch(error => {
+                console.error("Failed to play sound:", error);
+            });
         }
       }
       return;
