@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import type { Task, Settings, Session } from '../types';
+import type { Task, Settings, Session, TimerStatus } from '../types';
 import { TimerMode } from '../types';
 import Timer from './Timer';
 import BreakSuggestion from './BreakSuggestion';
