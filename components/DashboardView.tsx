@@ -52,7 +52,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, addSessi
       if (newPomodorosInSet % settings.pomodorosPerSet === 0) {
         setTimerMode(TimerMode.LONG_BREAK);
         if (settings.soundOnComplete) {
-            new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3').play().catch(error => {
+            new Audio('https://orangefreesounds.com/wp-content/uploads/2025/08/Soft-and-soothing-bell-chime-sound-effect.mp3').play().catch(error => {
                 console.error("Failed to play sound:", error);
             });
         }

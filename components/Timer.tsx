@@ -76,7 +76,7 @@ const Timer: React.FC<TimerProps> = ({ settings, onSessionComplete, timerMode, s
         setTimerStatus(TimerStatus.STOPPED);
         onSessionComplete(totalSeconds / 60, true);
         if (settings.soundOnComplete) {
-            new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3').play().catch(error => {
+            new Audio('https://orangefreesounds.com/wp-content/uploads/2025/08/Clean-and-sharp-metal-ding-sound-effect.mp3').play().catch(error => {
                 console.error("Failed to play sound:", error);
             });
         }
