@@ -78,7 +78,8 @@ const Timer: React.FC<TimerProps> = ({ settings, onSessionComplete, timerMode, s
 
   const handleVoidPomodoro = (reason: string) => {
     console.log(`Pomodoro voided: ${reason}`);
-    onSessionComplete(totalSeconds / 60, false);
+    const elapsedSeconds = totalSeconds - secondsLeft;
+    onSessionComplete(elapsedSeconds / 60, false);
     setIsModalOpen(false);
     // Reset timer after voiding
     resetTimer();
