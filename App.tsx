@@ -13,15 +13,36 @@ const App: React.FC = () => {
   const [activeScreen, setActiveScreen] = useState<Screen>(ScreenEnum.DASHBOARD);
   const [tasks, setTasks] = useState<Task[]>(() => {
     const savedTasks = localStorage.getItem('focusflow_tasks');
-    return savedTasks ? JSON.parse(savedTasks) : [];
+    if (savedTasks) {
+      try {
+        return JSON.parse(savedTasks);
+      } catch (error) {
+        console.error('Error parsing tasks from localStorage:', error);
+      }
+    }
+    return [];
   });
   const [sessions, setSessions] = useState<Session[]>(() => {
     const savedSessions = localStorage.getItem('focusflow_sessions');
-    return savedSessions ? JSON.parse(savedSessions) : [];
+    if (savedSessions) {
+      try {
+        return JSON.parse(savedSessions);
+      } catch (error) {
+        console.error('Error parsing sessions from localStorage:', error);
+      }
+    }
+    return [];
   });
   const [settings, setSettings] = useState<Settings>(() => {
     const savedSettings = localStorage.getItem('focusflow_settings');
-    return savedSettings ? JSON.parse(savedSettings) : DEFAULT_SETTINGS;
+    if (savedSettings) {
+      try {
+        return JSON.parse(savedSettings);
+      } catch (error) {
+        console.error('Error parsing settings from localStorage:', error);
+      }
+    }
+    return DEFAULT_SETTINGS;
   });
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
 
