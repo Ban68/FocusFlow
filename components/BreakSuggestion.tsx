@@ -1,21 +1,39 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getBreakSuggestion } from '../services/geminiService';
 import { ICONS } from '../constants';
 
 const BreakSuggestion: React.FC = () => {
   const [suggestion, setSuggestion] = useState<string>('Loading a break idea...');
   const [loading, setLoading] = useState(true);
+  const controllerRef = useRef<AbortController | null>(null);
 
   const fetchSuggestion = async () => {
+    controllerRef.current?.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
     setLoading(true);
-    const newSuggestion = await getBreakSuggestion();
-    setSuggestion(newSuggestion);
-    setLoading(false);
+    try {
+      const newSuggestion = await getBreakSuggestion(controller.signal);
+      if (!controller.signal.aborted) {
+        setSuggestion(newSuggestion);
+      }
+    } catch (e) {
+      if ((e as DOMException).name !== 'AbortError') {
+        console.error(e);
+      }
+    } finally {
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
+    }
   };
 
   useEffect(() => {
     fetchSuggestion();
+    return () => {
+      controllerRef.current?.abort();
+    };
   }, []);
 
   return (

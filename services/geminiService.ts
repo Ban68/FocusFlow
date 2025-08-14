@@ -8,7 +8,9 @@ const fallback = [
 ];
 const pick = () => fallback[Math.floor(Math.random() * fallback.length)];
 
-export async function getBreakSuggestion(): Promise<string> {
+export async function getBreakSuggestion(
+  signal?: AbortSignal
+): Promise<string> {
   const prompt =
     "Sugiere una única micro-pausa saludable, concreta y sin pantallas. Devuelve solo la acción.";
 
@@ -17,6 +19,7 @@ export async function getBreakSuggestion(): Promise<string> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt }),
+      signal,
     });
 
     if (!r.ok) {
