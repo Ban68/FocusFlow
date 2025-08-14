@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import type { Task, Settings, TimerStatus } from '../types';
 import { TimerMode } from '../types';
 import Timer from './Timer';
 import BreakSuggestion from './BreakSuggestion';
+import TaskItem from './TaskItem';
 
 interface DashboardViewProps {
   tasks: Task[];
@@ -21,21 +22,6 @@ interface DashboardViewProps {
   setTimerStatus: (status: TimerStatus) => void;
   onSessionComplete: (duration: number, isCompleted: boolean) => void;
 }
-
-const TaskItem: React.FC<{ task: Task; isActive: boolean; onClick: (id: string) => void }> = ({ task, isActive, onClick }) => (
-  <div
-    onClick={() => onClick(task.id)}
-    className={`p-3 rounded-lg cursor-pointer transition-all duration-200 border-l-4 ${isActive ? 'bg-slate-700/80 border-cyan-400' : 'bg-slate-800 hover:bg-slate-700/50 border-slate-600'}`}
-  >
-    <p className="font-medium text-white">{task.title}</p>
-    <div className="flex items-center text-sm text-slate-400 mt-1">
-      <span>{task.pomodorosCompleted} / {task.pomodoros}</span>
-      <div className="w-full bg-slate-600 rounded-full h-1.5 ml-2">
-        <div className="bg-cyan-500 h-1.5 rounded-full" style={{ width: `${(task.pomodorosCompleted / task.pomodoros) * 100}%` }}></div>
-      </div>
-    </div>
-  </div>
-);
 
 const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, activeTaskId, setActiveTaskId, timerMode, setTimerMode, pomodorosInSet, totalSeconds, setTotalSeconds, secondsLeft, setSecondsLeft, timerStatus, setTimerStatus, onSessionComplete }) => {
 
@@ -87,9 +73,14 @@ const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, activeTa
               todayTasks.map(task => (
                 <TaskItem
                   key={task.id}
-                  task={task}
-                  isActive={task.id === activeTaskId}
-                  onClick={setActiveTaskId}
+                  title={task.title}
+                  progress={{ current: task.pomodorosCompleted, total: task.pomodoros }}
+                  onClick={() => setActiveTaskId(task.id)}
+                  className={`transition-all duration-200 border-l-4 ${
+                    task.id === activeTaskId
+                      ? 'bg-slate-700/80 border-cyan-400'
+                      : 'bg-slate-800 hover:bg-slate-700/50 border-slate-600'
+                  }`}
                 />
               ))
             ) : (
