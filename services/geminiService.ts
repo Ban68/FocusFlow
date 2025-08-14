@@ -9,13 +9,36 @@ const fallback = [
 const pick = () => fallback[Math.floor(Math.random() * fallback.length)];
 
 export async function getBreakSuggestion(): Promise<string> {
+  const prompt =
+    "Sugiere una única micro-pausa saludable, concreta y sin pantallas. Devuelve solo la acción.";
+
   try {
-    const r = await fetch("/api/gemini", { method: "POST", headers: { "Content-Type": "application/json" } });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const { text } = await r.json();
-    return (text?.trim() || pick());
+    const r = await fetch("/api/gemini", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    });
+
+    if (!r.ok) {
+      console.error("Gemini HTTP:", r.status);
+      return pick();
+    }
+
+    const type = r.headers.get("content-type") || "";
+    if (!type.includes("application/json")) {
+      console.error("Gemini tipo:", type);
+      return pick();
+    }
+
+    try {
+      const { text } = await r.json();
+      return text?.trim() || pick();
+    } catch (e) {
+      console.error("Gemini parse:", e);
+      return pick();
+    }
   } catch (e) {
-    console.error("Gemini:", e);
+    console.error("Gemini red:", e);
     return pick();
   }
 }
