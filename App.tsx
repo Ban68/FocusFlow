@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Screen, Task, Session, Settings, TimerMode, TimerStatus } from './types';
 import { Screen as ScreenEnum, TimerMode as TimerModeEnum, TimerStatus as TimerStatusEnum } from './types';
 import { DEFAULT_SETTINGS } from './constants';
+import { getDuration } from './utils/time';
 import Header from './components/Header';
 import DashboardView from './components/DashboardView';
 import TasksView from './components/TasksView';
@@ -50,24 +51,16 @@ const App: React.FC = () => {
   const [timerMode, setTimerMode] = useState<TimerMode>(TimerModeEnum.WORK);
   const [pomodorosInSet, setPomodorosInSet] = useState(0);
   const shouldAutoStart = useRef(false);
-  const getDuration = useCallback((mode: TimerMode) => {
-    switch (mode) {
-      case TimerModeEnum.WORK: return settings.workDuration * 60;
-      case TimerModeEnum.SHORT_BREAK: return settings.shortBreakDuration * 60;
-      case TimerModeEnum.LONG_BREAK: return settings.longBreakDuration * 60;
-      default: return settings.workDuration * 60;
-    }
-  }, [settings]);
-  const [totalSeconds, setTotalSeconds] = useState(getDuration(timerMode));
-  const [secondsLeft, setSecondsLeft] = useState(getDuration(timerMode));
+  const [totalSeconds, setTotalSeconds] = useState(getDuration(timerMode, settings));
+  const [secondsLeft, setSecondsLeft] = useState(getDuration(timerMode, settings));
   const [timerStatus, setTimerStatus] = useState<TimerStatus>(TimerStatusEnum.STOPPED);
 
   useEffect(() => {
-    const newTotalSeconds = getDuration(timerMode);
+    const newTotalSeconds = getDuration(timerMode, settings);
     setTotalSeconds(newTotalSeconds);
     setSecondsLeft(newTotalSeconds);
     // Do not reset timerStatus here, it should be controlled by user actions
-  }, [timerMode, getDuration]);
+  }, [timerMode, settings]);
 
   useEffect(() => {
     if (shouldAutoStart.current) {
