@@ -137,6 +137,19 @@ const App: React.FC = () => {
     });
   };
 
+  const getSoundForMode = (mode: TimerMode): [string, string] => {
+    switch (mode) {
+      case TimerModeEnum.WORK:
+        return [DING, DING_ALT];
+      case TimerModeEnum.SHORT_BREAK:
+        return [BELL, BELL_ALT];
+      case TimerModeEnum.LONG_BREAK:
+        return [DING_ALT, BELL];
+      default:
+        return [DING, DING_ALT];
+    }
+  };
+
   const handleSessionComplete = useCallback((duration: number, isCompleted: boolean) => {
     addSession({
       date: new Date().toISOString().split('T')[0],
@@ -152,9 +165,6 @@ const App: React.FC = () => {
       setPomodorosInSet(newPomodorosInSet);
       if (newPomodorosInSet % settings.pomodorosPerSet === 0) {
         setTimerMode(TimerModeEnum.LONG_BREAK);
-        if (settings.soundOnComplete) {
-          playSoundWithFallback(BELL, BELL_ALT);
-        }
       } else {
         setTimerMode(TimerModeEnum.SHORT_BREAK);
       }
@@ -167,11 +177,13 @@ const App: React.FC = () => {
     if (timerStatus !== TimerStatusEnum.RUNNING) return;
 
     if (secondsLeft <= 0) {
+      const finishedMode = timerMode;
       setTimerStatus(TimerStatusEnum.STOPPED);
       handleSessionComplete(totalSeconds / 60, true);
-        if (settings.soundOnComplete) {
-        playSoundWithFallback(DING, DING_ALT);
-        }
+      if (settings.soundOnComplete) {
+        const [primary, fallback] = getSoundForMode(finishedMode);
+        playSoundWithFallback(primary, fallback);
+      }
       shouldAutoStart.current = true;
       return;
     }
@@ -181,7 +193,7 @@ const App: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timerStatus, secondsLeft, totalSeconds, settings.soundOnComplete, handleSessionComplete]);
+  }, [timerStatus, secondsLeft, totalSeconds, timerMode, settings.soundOnComplete, handleSessionComplete]);
 
   const renderScreen = () => {
     switch (activeScreen) {
