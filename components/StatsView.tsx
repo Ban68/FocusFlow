@@ -7,35 +7,33 @@ interface StatsViewProps {
   sessions: Session[];
 }
 
-const getStreak = (sessions: Session[]): number => {
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const toUTC = (dateStr: string) => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return Date.UTC(year, month - 1, day);
+};
+
+export const getStreak = (sessions: Session[], current: Date = new Date()): number => {
     if (sessions.length === 0) return 0;
 
     const sessionDates = [...new Set(sessions.filter(s => s.isCompleted).map(s => s.date))].sort();
     if (sessionDates.length === 0) return 0;
-    
-    let currentStreak = 0;
-    let today = new Date();
-    today.setHours(0,0,0,0);
-    
-    // Check if the last session date is today or yesterday to count the streak
-    const lastSessionDate = new Date(sessionDates[sessionDates.length - 1]);
-    lastSessionDate.setHours(0,0,0,0);
 
-    const diffTime = today.getTime() - lastSessionDate.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+    const todayUTC = Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), current.getUTCDate());
+
+    const lastSessionUTC = toUTC(sessionDates[sessionDates.length - 1]);
+    const diffDays = (todayUTC - lastSessionUTC) / DAY_MS;
+
     if (diffDays > 1) {
         return 0; // Streak is broken
     }
 
-    currentStreak = 1;
+    let currentStreak = 1;
     for (let i = sessionDates.length - 2; i >= 0; i--) {
-        const currentDate = new Date(sessionDates[i+1]);
-        const prevDate = new Date(sessionDates[i]);
-        currentDate.setHours(0,0,0,0);
-        prevDate.setHours(0,0,0,0);
-
-        const dayDiff = (currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
+        const currentDate = toUTC(sessionDates[i + 1]);
+        const prevDate = toUTC(sessionDates[i]);
+        const dayDiff = (currentDate - prevDate) / DAY_MS;
 
         if (dayDiff === 1) {
             currentStreak++;
@@ -43,22 +41,24 @@ const getStreak = (sessions: Session[]): number => {
             break;
         }
     }
-    
+
     return currentStreak;
 };
 
 const StatsView: React.FC<StatsViewProps> = ({ sessions }) => {
   const data = useMemo(() => {
+    const today = new Date();
+    const todayUTC = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+
     const last7Days = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        return d.toISOString().split('T')[0];
+        const dateUTC = todayUTC - i * DAY_MS;
+        return new Date(dateUTC).toISOString().split('T')[0];
     }).reverse();
 
     return last7Days.map(date => {
         const daySessions = sessions.filter(s => s.date === date);
         return {
-            date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+            date: new Date(toUTC(date)).toLocaleDateString('en-US', { weekday: 'short' }),
             Completed: daySessions.filter(s => s.isCompleted).length,
             Voided: daySessions.filter(s => !s.isCompleted).length,
         };
