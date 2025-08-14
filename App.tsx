@@ -4,6 +4,7 @@ import type { Screen, Task, Session, Settings, TimerMode, TimerStatus } from './
 import { Screen as ScreenEnum, TimerMode as TimerModeEnum, TimerStatus as TimerStatusEnum } from './types';
 import { DEFAULT_SETTINGS } from './constants';
 import { getDuration } from './utils/time';
+import { BELL, BELL_ALT, DING, DING_ALT } from './sounds';
 import Header from './components/Header';
 import DashboardView from './components/DashboardView';
 import TasksView from './components/TasksView';
@@ -125,6 +126,17 @@ const App: React.FC = () => {
       }));
   }, []);
 
+  const playSoundWithFallback = (primary: string, fallback: string) => {
+    const audio = new Audio(primary);
+    audio.play().catch(error => {
+      console.error('Failed to play sound:', error);
+      const fallbackAudio = new Audio(fallback);
+      fallbackAudio.play().catch(fallbackError => {
+        console.error('Failed to play fallback sound:', fallbackError);
+      });
+    });
+  };
+
   const handleSessionComplete = useCallback((duration: number, isCompleted: boolean) => {
     addSession({
       date: new Date().toISOString().split('T')[0],
@@ -141,11 +153,7 @@ const App: React.FC = () => {
       if (newPomodorosInSet % settings.pomodorosPerSet === 0) {
         setTimerMode(TimerModeEnum.LONG_BREAK);
         if (settings.soundOnComplete) {
-          new Audio('https://orangefreesounds.com/wp-content/uploads/2025/08/Soft-and-soothing-bell-chime-sound-effect.mp3')
-            .play()
-            .catch(error => {
-              console.error('Failed to play sound:', error);
-            });
+          playSoundWithFallback(BELL, BELL_ALT);
         }
       } else {
         setTimerMode(TimerModeEnum.SHORT_BREAK);
@@ -161,13 +169,9 @@ const App: React.FC = () => {
     if (secondsLeft <= 0) {
       setTimerStatus(TimerStatusEnum.STOPPED);
       handleSessionComplete(totalSeconds / 60, true);
-      if (settings.soundOnComplete) {
-        new Audio('https://orangefreesounds.com/wp-content/uploads/2025/08/Clean-and-sharp-metal-ding-sound-effect.mp3')
-          .play()
-          .catch(error => {
-            console.error('Failed to play sound:', error);
-          });
-      }
+        if (settings.soundOnComplete) {
+        playSoundWithFallback(DING, DING_ALT);
+        }
       shouldAutoStart.current = true;
       return;
     }
