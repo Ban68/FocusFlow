@@ -3,6 +3,7 @@ import type { TimerMode, Settings, TimerStatus } from '../types';
 import { TimerMode as TimerModeEnum, TimerStatus as TimerStatusEnum } from '../types';
 import { ICONS } from '../constants';
 import InterruptionModal from './InterruptionModal';
+import { getDuration } from '../utils/time';
 
 interface TimerProps {
   settings: Settings;
@@ -63,15 +64,7 @@ const Timer: React.FC<TimerProps> = ({ settings, onSessionComplete, timerMode, s
   
   const resetTimer = () => {
     setTimerStatus(TimerStatusEnum.STOPPED);
-    // Recalculate totalSeconds based on current timerMode and settings
-    const newTotalSeconds = (() => {
-      switch (timerMode) {
-        case TimerModeEnum.WORK: return settings.workDuration * 60;
-        case TimerModeEnum.SHORT_BREAK: return settings.shortBreakDuration * 60;
-        case TimerModeEnum.LONG_BREAK: return settings.longBreakDuration * 60;
-        default: return settings.workDuration * 60;
-      }
-    })();
+    const newTotalSeconds = getDuration(timerMode, settings);
     setTotalSeconds(newTotalSeconds);
     setSecondsLeft(newTotalSeconds);
   };
