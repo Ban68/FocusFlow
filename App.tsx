@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import type { Screen, Task, Session, Settings, TimerMode, TimerStatus } from './types';
 import { Screen as ScreenEnum, TimerMode as TimerModeEnum, TimerStatus as TimerStatusEnum } from './types';
 import { DEFAULT_SETTINGS } from './constants';
@@ -156,7 +157,7 @@ const App: React.FC = () => {
         return [DING, DING_ALT];
       case TimerModeEnum.SHORT_BREAK:
         return [BELL, BELL_ALT];
-      case TimerModeEnum.LONG_BREAK:
+      case TimerModeEnum.LONG_BREAK:.
         return [DING_ALT, BELL];
       default:
         return [DING, DING_ALT];
@@ -268,6 +269,7 @@ const App: React.FC = () => {
           {renderScreen()}
         </main>
       </div>
+      <Analytics />
     </div>
   );
 };
