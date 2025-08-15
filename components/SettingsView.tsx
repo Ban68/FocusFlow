@@ -97,6 +97,14 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings }) =>
         >
             Reset to Defaults
         </button>
+        <a
+          href="/privacy.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block text-center text-slate-400 hover:text-white underline mt-2"
+        >
+          Privacy Policy
+        </a>
       </div>
     </div>
   );
