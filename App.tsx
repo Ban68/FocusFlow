@@ -157,7 +157,7 @@ const App: React.FC = () => {
         return [DING, DING_ALT];
       case TimerModeEnum.SHORT_BREAK:
         return [BELL, BELL_ALT];
-      case TimerModeEnum.LONG_BREAK:.
+      case TimerModeEnum.LONG_BREAK:
         return [DING_ALT, BELL];
       default:
         return [DING, DING_ALT];
