@@ -12,15 +12,14 @@ interface TasksViewProps {
 const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskPomos, setNewTaskPomos] = useState(1);
-  const [newTaskPriority, setNewTaskPriority] = useState(1);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editPomos, setEditPomos] = useState(1);
-  const [editPriority, setEditPriority] = useState(1);
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (newTaskTitle.trim()) {
+      const maxPriority = tasks.reduce((max, t) => Math.max(max, t.priority), 0);
       const newTask: Task = {
         id: crypto.randomUUID(),
         title: newTaskTitle.trim(),
@@ -28,12 +27,11 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
         pomodorosCompleted: 0,
         isToday: false,
         completed: false,
-        priority: newTaskPriority,
+        priority: maxPriority + 1,
       };
       setTasks(prev => [...prev, newTask]);
       setNewTaskTitle('');
       setNewTaskPomos(1);
-      setNewTaskPriority(1);
     }
   };
 
@@ -45,10 +43,10 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
     setTasks(prev => prev.filter(t => t.id !== id));
   };
 
-  const handleEditTask = (id: string, title: string, pomodoros: number, priority: number) => {
+  const handleEditTask = (id: string, title: string, pomodoros: number) => {
     setTasks(prev => prev.map(t =>
       t.id === id
-        ? { ...t, title, pomodoros, priority, completed: t.pomodorosCompleted >= pomodoros }
+        ? { ...t, title, pomodoros, completed: t.pomodorosCompleted >= pomodoros }
         : t
     ));
   };
@@ -57,19 +55,31 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
     setEditingTaskId(task.id);
     setEditTitle(task.title);
     setEditPomos(task.pomodoros);
-    setEditPriority(task.priority);
   };
 
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingTaskId && editTitle.trim()) {
-      handleEditTask(editingTaskId, editTitle.trim(), editPomos, editPriority);
+      handleEditTask(editingTaskId, editTitle.trim(), editPomos);
       setEditingTaskId(null);
     }
   };
 
   const handleCancelEdit = () => {
     setEditingTaskId(null);
+  };
+
+  const swapTaskPriority = (id1: string, id2: string) => {
+    setTasks(prev => {
+      const task1 = prev.find(t => t.id === id1);
+      const task2 = prev.find(t => t.id === id2);
+      if (!task1 || !task2) return prev;
+      return prev.map(t => {
+        if (t.id === id1) return { ...t, priority: task2.priority };
+        if (t.id === id2) return { ...t, priority: task1.priority };
+        return t;
+      });
+    });
   };
   
   const todayTasks = tasks.filter(t => t.isToday && !t.completed).sort((a, b) => a.priority - b.priority);
@@ -100,17 +110,6 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
                 className="w-20 bg-slate-700 text-white p-2 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
             </div>
-            <div className="flex items-center space-x-4">
-              <label htmlFor="priority" className="text-slate-300">Priority:</label>
-              <input
-                type="number"
-                id="priority"
-                value={newTaskPriority}
-                onChange={(e) => setNewTaskPriority(Math.max(1, parseInt(e.target.value, 10)))}
-                min="1"
-                className="w-20 bg-slate-700 text-white p-2 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              />
-            </div>
             <button type="submit" className="w-full flex justify-center items-center space-x-2 bg-cyan-500 text-slate-900 font-bold p-3 rounded-lg hover:bg-cyan-400 transition-colors">
               {ICONS.PLUS} <span>Add to Inventory</span>
             </button>
@@ -122,7 +121,7 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
         <div className="p-6 bg-slate-800/50 rounded-2xl border border-slate-700/50">
             <h2 className="text-xl font-bold text-white mb-4">To-Do Today</h2>
             <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                  {todayTasks.length > 0 ? todayTasks.map(task => (
+                  {todayTasks.length > 0 ? todayTasks.map((task, index) => (
                     editingTaskId === task.id ? (
                       <form key={task.id} onSubmit={handleSaveEdit} className="flex flex-col space-y-2 p-3 bg-slate-800 rounded-lg">
                         <input
@@ -137,13 +136,6 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
                             value={editPomos}
                             min={1}
                             onChange={(e) => setEditPomos(Math.max(1, parseInt(e.target.value, 10)))}
-                            className="w-20 bg-slate-700 text-white p-2 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                          />
-                          <input
-                            type="number"
-                            value={editPriority}
-                            min={1}
-                            onChange={(e) => setEditPriority(Math.max(1, parseInt(e.target.value, 10)))}
                             className="w-20 bg-slate-700 text-white p-2 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                           />
                           <div className="ml-auto space-x-2">
@@ -163,6 +155,16 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
                         progress={{ current: task.pomodorosCompleted, total: task.pomodoros }}
                         actions={
                           <>
+                            {index > 0 && (
+                              <button onClick={() => swapTaskPriority(task.id, todayTasks[index - 1].id)} className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-full transition-colors">
+                                {ICONS.ARROW_UP}
+                              </button>
+                            )}
+                            {index < todayTasks.length - 1 && (
+                              <button onClick={() => swapTaskPriority(task.id, todayTasks[index + 1].id)} className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-full transition-colors">
+                                {ICONS.ARROW_DOWN}
+                              </button>
+                            )}
                             <button
                               onClick={() => handleToggleToday(task.id)}
                               className={`px-3 py-1 text-sm rounded-full transition-colors ${task.isToday ? 'bg-cyan-500 text-slate-900 font-semibold' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
@@ -187,7 +189,7 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
         <div className="p-6 bg-slate-800/50 rounded-2xl border border-slate-700/50">
             <h2 className="text-xl font-bold text-white mb-4">Activity Inventory</h2>
             <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                  {inventoryTasks.length > 0 ? inventoryTasks.map(task => (
+                  {inventoryTasks.length > 0 ? inventoryTasks.map((task, index) => (
                     editingTaskId === task.id ? (
                       <form key={task.id} onSubmit={handleSaveEdit} className="flex flex-col space-y-2 p-3 bg-slate-800 rounded-lg">
                         <input
@@ -202,13 +204,6 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
                             value={editPomos}
                             min={1}
                             onChange={(e) => setEditPomos(Math.max(1, parseInt(e.target.value, 10)))}
-                            className="w-20 bg-slate-700 text-white p-2 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                          />
-                          <input
-                            type="number"
-                            value={editPriority}
-                            min={1}
-                            onChange={(e) => setEditPriority(Math.max(1, parseInt(e.target.value, 10)))}
                             className="w-20 bg-slate-700 text-white p-2 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                           />
                           <div className="ml-auto space-x-2">
@@ -228,6 +223,16 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
                         progress={{ current: task.pomodorosCompleted, total: task.pomodoros }}
                         actions={
                           <>
+                            {index > 0 && (
+                              <button onClick={() => swapTaskPriority(task.id, inventoryTasks[index - 1].id)} className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-full transition-colors">
+                                {ICONS.ARROW_UP}
+                              </button>
+                            )}
+                            {index < inventoryTasks.length - 1 && (
+                              <button onClick={() => swapTaskPriority(task.id, inventoryTasks[index + 1].id)} className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-full transition-colors">
+                                {ICONS.ARROW_DOWN}
+                              </button>
+                            )}
                             <button
                               onClick={() => handleToggleToday(task.id)}
                               className={`px-3 py-1 text-sm rounded-full transition-colors ${task.isToday ? 'bg-cyan-500 text-slate-900 font-semibold' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
