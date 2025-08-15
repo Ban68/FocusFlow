@@ -6,9 +6,11 @@ import Timer from './Timer';
 import BreakSuggestion from './BreakSuggestion';
 import TaskItem from './TaskItem';
 import NextTaskModal from './NextTaskModal';
+import { ICONS } from '../constants';
 
 interface DashboardViewProps {
   tasks: Task[];
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   settings: Settings;
   activeTaskId: string | null;
   setActiveTaskId: (id: string | null) => void;
@@ -28,6 +30,7 @@ interface DashboardViewProps {
 
 const DashboardView: React.FC<DashboardViewProps> = ({
   tasks,
+  setTasks,
   settings,
   activeTaskId,
   setActiveTaskId,
@@ -52,6 +55,19 @@ const DashboardView: React.FC<DashboardViewProps> = ({
         .sort((a, b) => a.priority - b.priority),
     [tasks]
   );
+
+  const swapTaskPriority = (id1: string, id2: string) => {
+    setTasks(prev => {
+      const task1 = prev.find(t => t.id === id1);
+      const task2 = prev.find(t => t.id === id2);
+      if (!task1 || !task2) return prev;
+      return prev.map(t => {
+        if (t.id === id1) return { ...t, priority: task2.priority };
+        if (t.id === id2) return { ...t, priority: task1.priority };
+        return t;
+      });
+    });
+  };
 
   const handleCompleteTask = () => {
     if (activeTaskId) {
@@ -130,12 +146,38 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           <h2 className="text-lg font-bold text-white mb-3">To-Do Today</h2>
           <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
             {todayTasks.length > 0 ? (
-              todayTasks.map(task => (
+              todayTasks.map((task, index) => (
                 <TaskItem
                   key={task.id}
                   title={task.title}
                   progress={{ current: task.pomodorosCompleted, total: task.pomodoros }}
                   onClick={() => setActiveTaskId(task.id)}
+                  actions={
+                    <>
+                      {index > 0 && (
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            swapTaskPriority(task.id, todayTasks[index - 1].id);
+                          }}
+                          className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-full transition-colors"
+                        >
+                          {ICONS.ARROW_UP}
+                        </button>
+                      )}
+                      {index < todayTasks.length - 1 && (
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            swapTaskPriority(task.id, todayTasks[index + 1].id);
+                          }}
+                          className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-full transition-colors"
+                        >
+                          {ICONS.ARROW_DOWN}
+                        </button>
+                      )}
+                    </>
+                  }
                   className={`transition-all duration-200 border-l-4 ${
                     task.id === activeTaskId
                       ? 'bg-slate-700/80 border-cyan-400'
