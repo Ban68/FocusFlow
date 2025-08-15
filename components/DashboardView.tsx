@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import type { Task, Settings, TimerStatus } from '../types';
 import { TimerMode } from '../types';
 import Timer from './Timer';
@@ -26,9 +26,13 @@ interface DashboardViewProps {
 const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, activeTaskId, setActiveTaskId, timerMode, setTimerMode, pomodorosInSet, totalSeconds, setTotalSeconds, secondsLeft, setSecondsLeft, timerStatus, setTimerStatus, onSessionComplete }) => {
 
   const activeTask = tasks.find(t => t.id === activeTaskId);
-  const todayTasks = tasks
-    .filter(t => t.isToday && !t.completed)
-    .sort((a, b) => a.priority - b.priority);
+  const todayTasks = useMemo(
+    () =>
+      tasks
+        .filter(t => t.isToday && !t.completed)
+        .sort((a, b) => a.priority - b.priority),
+    [tasks]
+  );
 
   useEffect(() => {
     if (!activeTaskId && todayTasks.length > 0) {
