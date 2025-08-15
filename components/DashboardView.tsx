@@ -1,9 +1,12 @@
+
 import React, { useEffect, useMemo } from 'react';
+
 import type { Task, Settings, TimerStatus } from '../types';
 import { TimerMode } from '../types';
 import Timer from './Timer';
 import BreakSuggestion from './BreakSuggestion';
 import TaskItem from './TaskItem';
+import NextTaskModal from './NextTaskModal';
 
 interface DashboardViewProps {
   tasks: Task[];
@@ -20,6 +23,7 @@ interface DashboardViewProps {
   timerStatus: TimerStatus;
   setTimerStatus: (status: TimerStatus) => void;
   onSessionComplete: (duration: number, isCompleted: boolean) => void;
+
   onCompleteTask: (id: string) => void;
 }
 
@@ -49,9 +53,11 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     [tasks]
   );
 
+
   const handleCompleteTask = () => {
     if (activeTaskId) {
       onCompleteTask(activeTaskId);
+
       const remaining = todayTasks.filter(t => t.id !== activeTaskId);
       if (remaining.length > 0 && window.confirm('Task completed. Continue with next task?')) {
         setActiveTaskId(remaining[0].id);
@@ -60,6 +66,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
       }
     }
   };
+
 
   useEffect(() => {
     if (!activeTaskId && todayTasks.length > 0) {
@@ -90,6 +97,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           <h2 className="text-lg font-bold text-white mb-3">
             {activeTask ? 'Current Task' : 'No Active Task'}
           </h2>
+
           {activeTask ? (
             <div className="p-4 rounded-lg bg-slate-700 border-l-4 border-cyan-400">
               <p className="font-bold text-xl text-white">{activeTask.title}</p>
@@ -109,6 +117,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             </p>
           )}
         </div>
+main
         <div className="p-4 bg-slate-800/50 rounded-2xl border border-slate-700/50 flex-grow">
           <h2 className="text-lg font-bold text-white mb-3">To-Do Today</h2>
           <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
@@ -134,6 +143,12 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </div>
+      <NextTaskModal
+        isOpen={showTaskSelector}
+        tasks={todayTasks}
+        onSelect={handleSelectNextTask}
+        onClose={() => setShowTaskSelector(false)}
+      />
     </div>
   );
 };

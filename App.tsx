@@ -136,6 +136,7 @@ const App: React.FC = () => {
           : t
       )
     );
+
   }, []);
 
   const playSoundWithFallback = (primary: string, fallback: string) => {
@@ -246,6 +247,7 @@ const App: React.FC = () => {
             pomodorosInSet={pomodorosInSet}
             totalSeconds={totalSeconds}
             setTotalSeconds={setTotalSeconds}
+
             secondsLeft={secondsLeft}
             setSecondsLeft={setSecondsLeft}
             timerStatus={timerStatus}
@@ -256,6 +258,7 @@ const App: React.FC = () => {
         );
     }
   };
+
 
   return (
     <div className="bg-slate-900 text-white min-h-screen flex flex-col items-center">
