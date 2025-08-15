@@ -26,7 +26,9 @@ interface DashboardViewProps {
 const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, activeTaskId, setActiveTaskId, timerMode, setTimerMode, pomodorosInSet, totalSeconds, setTotalSeconds, secondsLeft, setSecondsLeft, timerStatus, setTimerStatus, onSessionComplete }) => {
 
   const activeTask = tasks.find(t => t.id === activeTaskId);
-  const todayTasks = tasks.filter(t => t.isToday && !t.completed);
+  const todayTasks = tasks
+    .filter(t => t.isToday && !t.completed)
+    .sort((a, b) => a.priority - b.priority);
 
   useEffect(() => {
     if (!activeTaskId && todayTasks.length > 0) {

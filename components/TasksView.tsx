@@ -12,9 +12,11 @@ interface TasksViewProps {
 const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskPomos, setNewTaskPomos] = useState(1);
+  const [newTaskPriority, setNewTaskPriority] = useState(1);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editPomos, setEditPomos] = useState(1);
+  const [editPriority, setEditPriority] = useState(1);
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,10 +28,12 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
         pomodorosCompleted: 0,
         isToday: false,
         completed: false,
+        priority: newTaskPriority,
       };
       setTasks(prev => [...prev, newTask]);
       setNewTaskTitle('');
       setNewTaskPomos(1);
+      setNewTaskPriority(1);
     }
   };
 
@@ -41,10 +45,10 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
     setTasks(prev => prev.filter(t => t.id !== id));
   };
 
-  const handleEditTask = (id: string, title: string, pomodoros: number) => {
+  const handleEditTask = (id: string, title: string, pomodoros: number, priority: number) => {
     setTasks(prev => prev.map(t =>
       t.id === id
-        ? { ...t, title, pomodoros, completed: t.pomodorosCompleted >= pomodoros }
+        ? { ...t, title, pomodoros, priority, completed: t.pomodorosCompleted >= pomodoros }
         : t
     ));
   };
@@ -53,12 +57,13 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
     setEditingTaskId(task.id);
     setEditTitle(task.title);
     setEditPomos(task.pomodoros);
+    setEditPriority(task.priority);
   };
 
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingTaskId && editTitle.trim()) {
-      handleEditTask(editingTaskId, editTitle.trim(), editPomos);
+      handleEditTask(editingTaskId, editTitle.trim(), editPomos, editPriority);
       setEditingTaskId(null);
     }
   };
@@ -67,9 +72,9 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
     setEditingTaskId(null);
   };
   
-  const todayTasks = tasks.filter(t => t.isToday && !t.completed);
-  const inventoryTasks = tasks.filter(t => !t.isToday && !t.completed);
-  const completedTasks = tasks.filter(t => t.completed);
+  const todayTasks = tasks.filter(t => t.isToday && !t.completed).sort((a, b) => a.priority - b.priority);
+  const inventoryTasks = tasks.filter(t => !t.isToday && !t.completed).sort((a, b) => a.priority - b.priority);
+  const completedTasks = tasks.filter(t => t.completed).sort((a, b) => a.priority - b.priority);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -91,6 +96,17 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
                 id="pomos"
                 value={newTaskPomos}
                 onChange={(e) => setNewTaskPomos(Math.max(1, parseInt(e.target.value, 10)))}
+                min="1"
+                className="w-20 bg-slate-700 text-white p-2 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+            <div className="flex items-center space-x-4">
+              <label htmlFor="priority" className="text-slate-300">Priority:</label>
+              <input
+                type="number"
+                id="priority"
+                value={newTaskPriority}
+                onChange={(e) => setNewTaskPriority(Math.max(1, parseInt(e.target.value, 10)))}
                 min="1"
                 className="w-20 bg-slate-700 text-white p-2 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
@@ -121,6 +137,13 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
                             value={editPomos}
                             min={1}
                             onChange={(e) => setEditPomos(Math.max(1, parseInt(e.target.value, 10)))}
+                            className="w-20 bg-slate-700 text-white p-2 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                          />
+                          <input
+                            type="number"
+                            value={editPriority}
+                            min={1}
+                            onChange={(e) => setEditPriority(Math.max(1, parseInt(e.target.value, 10)))}
                             className="w-20 bg-slate-700 text-white p-2 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                           />
                           <div className="ml-auto space-x-2">
@@ -179,6 +202,13 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, setTasks }) => {
                             value={editPomos}
                             min={1}
                             onChange={(e) => setEditPomos(Math.max(1, parseInt(e.target.value, 10)))}
+                            className="w-20 bg-slate-700 text-white p-2 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                          />
+                          <input
+                            type="number"
+                            value={editPriority}
+                            min={1}
+                            onChange={(e) => setEditPriority(Math.max(1, parseInt(e.target.value, 10)))}
                             className="w-20 bg-slate-700 text-white p-2 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                           />
                           <div className="ml-auto space-x-2">

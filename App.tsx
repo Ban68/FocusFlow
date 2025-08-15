@@ -17,7 +17,7 @@ const App: React.FC = () => {
     const savedTasks = localStorage.getItem('focusflow_tasks');
     if (savedTasks) {
       try {
-        return JSON.parse(savedTasks);
+        return (JSON.parse(savedTasks) as Task[]).map(t => ({ priority: 1, ...t }));
       } catch (error) {
         console.error('Error parsing tasks from localStorage:', error);
       }
@@ -102,9 +102,11 @@ const App: React.FC = () => {
   }, [settings]);
 
   useEffect(() => {
-    // If there is no active task, set one from the 'Today' list
-    if (!activeTaskId && tasks.some(t => t.isToday && !t.completed)) {
-      setActiveTaskId(tasks.find(t => t.isToday && !t.completed)?.id || null);
+    if (!activeTaskId) {
+      const next = tasks
+        .filter(t => t.isToday && !t.completed)
+        .sort((a, b) => a.priority - b.priority)[0];
+      setActiveTaskId(next ? next.id : null);
     }
   }, [tasks, activeTaskId]);
 
@@ -159,7 +161,25 @@ const App: React.FC = () => {
 
     if (timerMode === TimerModeEnum.WORK && isCompleted) {
       if (activeTaskId) {
+        const activeTask = tasks.find(t => t.id === activeTaskId);
+        const willBeCompleted = activeTask
+          ? activeTask.pomodorosCompleted + 1 >= activeTask.pomodoros
+          : false;
         completePomodoroForTask(activeTaskId);
+        if (willBeCompleted) {
+          const remaining = tasks
+            .filter(t => t.isToday && !t.completed && t.id !== activeTaskId)
+            .sort((a, b) => a.priority - b.priority);
+          if (remaining.length > 0) {
+            if (window.confirm('Task completed. Continue with next task?')) {
+              setActiveTaskId(remaining[0].id);
+            } else {
+              setActiveTaskId(null);
+            }
+          } else {
+            setActiveTaskId(null);
+          }
+        }
       }
       const newPomodorosInSet = pomodorosInSet + 1;
       setPomodorosInSet(newPomodorosInSet);
@@ -171,7 +191,7 @@ const App: React.FC = () => {
     } else {
       setTimerMode(TimerModeEnum.WORK);
     }
-  }, [addSession, timerMode, activeTaskId, completePomodoroForTask, pomodorosInSet, settings, setTimerMode, setPomodorosInSet]);
+  }, [addSession, timerMode, activeTaskId, tasks, completePomodoroForTask, pomodorosInSet, settings, setTimerMode, setPomodorosInSet, setActiveTaskId]);
 
   useEffect(() => {
     if (timerStatus !== TimerStatusEnum.RUNNING) return;
