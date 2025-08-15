@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import type { Task, Settings, TimerStatus } from '../types';
 import { TimerMode } from '../types';
 import Timer from './Timer';
@@ -40,8 +40,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   onSessionComplete,
   onCompleteTask,
 }) => {
-  const [showTaskSelector, setShowTaskSelector] = useState(false);
-
   const activeTask = tasks.find(t => t.id === activeTaskId);
   const todayTasks = useMemo(
     () =>
@@ -54,14 +52,13 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   const handleCompleteTask = () => {
     if (activeTaskId) {
       onCompleteTask(activeTaskId);
-      setActiveTaskId(null);
-      setShowTaskSelector(true);
+      const remaining = todayTasks.filter(t => t.id !== activeTaskId);
+      if (remaining.length > 0 && window.confirm('Task completed. Continue with next task?')) {
+        setActiveTaskId(remaining[0].id);
+      } else {
+        setActiveTaskId(null);
+      }
     }
-  };
-
-  const handleSelectNextTask = (id: string) => {
-    setActiveTaskId(id);
-    setShowTaskSelector(false);
   };
 
   useEffect(() => {
@@ -137,34 +134,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </div>
-      {showTaskSelector && (
-        <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-2xl">
-          <div className="bg-slate-800 p-6 rounded-lg border border-slate-700 max-w-sm w-full space-y-4">
-            <h3 className="text-lg font-bold text-white">Select Next Task</h3>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {todayTasks.length > 0 ? (
-                todayTasks.map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => handleSelectNextTask(t.id)}
-                    className="w-full text-left p-2 rounded bg-slate-700 hover:bg-slate-600 text-white"
-                  >
-                    {t.title}
-                  </button>
-                ))
-              ) : (
-                <p className="text-slate-400 text-center py-2">No tasks available</p>
-              )}
-            </div>
-            <button
-              onClick={() => setShowTaskSelector(false)}
-              className="w-full p-2 rounded bg-slate-700 hover:bg-slate-600 text-slate-300"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
