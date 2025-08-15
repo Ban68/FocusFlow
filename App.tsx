@@ -128,6 +128,16 @@ const App: React.FC = () => {
       }));
   }, []);
 
+  const markTaskCompleted = useCallback((id: string) => {
+    setTasks(prev =>
+      prev.map(t =>
+        t.id === id
+          ? { ...t, completed: true, pomodorosCompleted: t.pomodoros }
+          : t
+      )
+    );
+  }, []);
+
   const playSoundWithFallback = (primary: string, fallback: string) => {
     const audio = new Audio(primary);
     audio.play().catch(error => {
@@ -241,6 +251,7 @@ const App: React.FC = () => {
             timerStatus={timerStatus}
             setTimerStatus={setTimerStatus}
             onSessionComplete={handleSessionComplete}
+            onCompleteTask={markTaskCompleted}
           />
         );
     }
