@@ -240,6 +240,7 @@ const App: React.FC = () => {
         return (
           <DashboardView
             tasks={tasks}
+            setTasks={setTasks}
             settings={settings}
             activeTaskId={activeTaskId}
             setActiveTaskId={setActiveTaskId}
