@@ -1,5 +1,4 @@
-
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import type { Task, Settings, TimerStatus } from '../types';
 import { TimerMode } from '../types';
@@ -44,6 +43,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   onSessionComplete,
   onCompleteTask,
 }) => {
+  const [showTaskSelector, setShowTaskSelector] = useState(false);
   const activeTask = tasks.find(t => t.id === activeTaskId);
   const todayTasks = useMemo(
     () =>
@@ -53,20 +53,28 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     [tasks]
   );
 
-
   const handleCompleteTask = () => {
     if (activeTaskId) {
       onCompleteTask(activeTaskId);
 
       const remaining = todayTasks.filter(t => t.id !== activeTaskId);
-      if (remaining.length > 0 && window.confirm('Task completed. Continue with next task?')) {
-        setActiveTaskId(remaining[0].id);
+      if (remaining.length > 0) {
+        setShowTaskSelector(true);
       } else {
         setActiveTaskId(null);
       }
     }
   };
 
+  const handleSelectNextTask = (taskId: string) => {
+    setActiveTaskId(taskId);
+    setShowTaskSelector(false);
+  };
+
+  const handleCloseModal = () => {
+    setShowTaskSelector(false);
+    setActiveTaskId(null);
+  };
 
   useEffect(() => {
     if (!activeTaskId && todayTasks.length > 0) {
@@ -117,7 +125,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             </p>
           )}
         </div>
-main
+
         <div className="p-4 bg-slate-800/50 rounded-2xl border border-slate-700/50 flex-grow">
           <h2 className="text-lg font-bold text-white mb-3">To-Do Today</h2>
           <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
@@ -145,13 +153,12 @@ main
       </div>
       <NextTaskModal
         isOpen={showTaskSelector}
-        tasks={todayTasks}
+        tasks={todayTasks.filter(t => t.id !== activeTaskId)}
         onSelect={handleSelectNextTask}
-        onClose={() => setShowTaskSelector(false)}
+        onClose={handleCloseModal}
       />
     </div>
   );
 };
 
 export default DashboardView;
-
