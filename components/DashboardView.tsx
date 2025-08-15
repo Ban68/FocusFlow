@@ -1,10 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Task, Settings, TimerStatus } from '../types';
 import { TimerMode } from '../types';
 import Timer from './Timer';
 import BreakSuggestion from './BreakSuggestion';
 import TaskItem from './TaskItem';
+import NextTaskModal from './NextTaskModal';
 
 interface DashboardViewProps {
   tasks: Task[];
@@ -21,12 +22,27 @@ interface DashboardViewProps {
   timerStatus: TimerStatus;
   setTimerStatus: (status: TimerStatus) => void;
   onSessionComplete: (duration: number, isCompleted: boolean) => void;
+  onCompleteTask: (taskId: string) => void;
 }
 
-const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, activeTaskId, setActiveTaskId, timerMode, setTimerMode, pomodorosInSet, totalSeconds, setTotalSeconds, secondsLeft, setSecondsLeft, timerStatus, setTimerStatus, onSessionComplete }) => {
+const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, activeTaskId, setActiveTaskId, timerMode, setTimerMode, pomodorosInSet, totalSeconds, setTotalSeconds, secondsLeft, setSecondsLeft, timerStatus, setTimerStatus, onSessionComplete, onCompleteTask }) => {
 
   const activeTask = tasks.find(t => t.id === activeTaskId);
   const todayTasks = tasks.filter(t => t.isToday && !t.completed);
+  const [showTaskSelector, setShowTaskSelector] = useState(false);
+
+  const handleCompleteTask = () => {
+    if (activeTaskId) {
+      onCompleteTask(activeTaskId);
+      setActiveTaskId(null);
+      setShowTaskSelector(true);
+    }
+  };
+
+  const handleSelectNextTask = (id: string) => {
+    setActiveTaskId(id);
+    setShowTaskSelector(false);
+  };
 
   useEffect(() => {
     if (!activeTaskId && todayTasks.length > 0) {
@@ -57,15 +73,23 @@ const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, activeTa
           <h2 className="text-lg font-bold text-white mb-3">
             {activeTask ? 'Current Task' : 'No Active Task'}
           </h2>
-          {activeTask ? (
-             <div className="p-4 rounded-lg bg-slate-700 border-l-4 border-cyan-400">
-                <p className="font-bold text-xl text-white">{activeTask.title}</p>
-                <p className="text-slate-300 mt-1">Estimated Pomodoros: {activeTask.pomodoros}</p>
-             </div>
-          ) : (
-             <p className="text-slate-400">Select a task from your 'To-Do Today' list to begin.</p>
-          )}
-        </div>
+            {activeTask ? (
+              <>
+                <div className="p-4 rounded-lg bg-slate-700 border-l-4 border-cyan-400">
+                  <p className="font-bold text-xl text-white">{activeTask.title}</p>
+                  <p className="text-slate-300 mt-1">Estimated Pomodoros: {activeTask.pomodoros}</p>
+                </div>
+                <button
+                  onClick={handleCompleteTask}
+                  className="mt-3 w-full flex justify-center items-center space-x-2 bg-green-500 text-slate-900 font-bold p-2 rounded-lg hover:bg-green-400 transition-colors"
+                >
+                  Mark as Done
+                </button>
+              </>
+            ) : (
+               <p className="text-slate-400">Select a task from your 'To-Do Today' list to begin.</p>
+            )}
+          </div>
         <div className="p-4 bg-slate-800/50 rounded-2xl border border-slate-700/50 flex-grow">
           <h2 className="text-lg font-bold text-white mb-3">To-Do Today</h2>
           <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
@@ -89,6 +113,12 @@ const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, activeTa
           </div>
         </div>
       </div>
+      <NextTaskModal
+        isOpen={showTaskSelector}
+        tasks={todayTasks}
+        onSelect={handleSelectNextTask}
+        onClose={() => setShowTaskSelector(false)}
+      />
     </div>
   );
 };

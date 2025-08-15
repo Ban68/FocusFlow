@@ -126,6 +126,14 @@ const App: React.FC = () => {
       }));
   }, []);
 
+  const completeTask = useCallback((taskId: string) => {
+      setTasks(prevTasks => prevTasks.map(t =>
+          t.id === taskId
+              ? { ...t, pomodorosCompleted: t.pomodoros, completed: true }
+              : t
+      ));
+  }, []);
+
   const playSoundWithFallback = (primary: string, fallback: string) => {
     const audio = new Audio(primary);
     audio.play().catch(error => {
@@ -216,15 +224,16 @@ const App: React.FC = () => {
             pomodorosInSet={pomodorosInSet}
             totalSeconds={totalSeconds}
             setTotalSeconds={setTotalSeconds}
-            secondsLeft={secondsLeft}
-            setSecondsLeft={setSecondsLeft}
-            timerStatus={timerStatus}
-            setTimerStatus={setTimerStatus}
-            onSessionComplete={handleSessionComplete}
-          />
-        );
-    }
-  };
+              secondsLeft={secondsLeft}
+              setSecondsLeft={setSecondsLeft}
+              timerStatus={timerStatus}
+              setTimerStatus={setTimerStatus}
+              onSessionComplete={handleSessionComplete}
+              onCompleteTask={completeTask}
+            />
+          );
+      }
+    };
 
   return (
     <div className="bg-slate-900 text-white min-h-screen flex flex-col items-center">
