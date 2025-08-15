@@ -25,6 +25,7 @@ export interface Task {
   completed: boolean;
   pomodoros: number;
   pomodorosCompleted: number;
+  priority: number;
 }
 
 export interface Session {

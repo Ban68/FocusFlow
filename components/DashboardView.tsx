@@ -1,5 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
+
 import type { Task, Settings, TimerStatus } from '../types';
 import { TimerMode } from '../types';
 import Timer from './Timer';
@@ -22,27 +23,50 @@ interface DashboardViewProps {
   timerStatus: TimerStatus;
   setTimerStatus: (status: TimerStatus) => void;
   onSessionComplete: (duration: number, isCompleted: boolean) => void;
-  onCompleteTask: (taskId: string) => void;
+
+  onCompleteTask: (id: string) => void;
 }
 
-const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, activeTaskId, setActiveTaskId, timerMode, setTimerMode, pomodorosInSet, totalSeconds, setTotalSeconds, secondsLeft, setSecondsLeft, timerStatus, setTimerStatus, onSessionComplete, onCompleteTask }) => {
-
+const DashboardView: React.FC<DashboardViewProps> = ({
+  tasks,
+  settings,
+  activeTaskId,
+  setActiveTaskId,
+  timerMode,
+  setTimerMode,
+  pomodorosInSet,
+  totalSeconds,
+  setTotalSeconds,
+  secondsLeft,
+  setSecondsLeft,
+  timerStatus,
+  setTimerStatus,
+  onSessionComplete,
+  onCompleteTask,
+}) => {
   const activeTask = tasks.find(t => t.id === activeTaskId);
-  const todayTasks = tasks.filter(t => t.isToday && !t.completed);
-  const [showTaskSelector, setShowTaskSelector] = useState(false);
+  const todayTasks = useMemo(
+    () =>
+      tasks
+        .filter(t => t.isToday && !t.completed)
+        .sort((a, b) => a.priority - b.priority),
+    [tasks]
+  );
+
 
   const handleCompleteTask = () => {
     if (activeTaskId) {
       onCompleteTask(activeTaskId);
-      setActiveTaskId(null);
-      setShowTaskSelector(true);
+
+      const remaining = todayTasks.filter(t => t.id !== activeTaskId);
+      if (remaining.length > 0 && window.confirm('Task completed. Continue with next task?')) {
+        setActiveTaskId(remaining[0].id);
+      } else {
+        setActiveTaskId(null);
+      }
     }
   };
 
-  const handleSelectNextTask = (id: string) => {
-    setActiveTaskId(id);
-    setShowTaskSelector(false);
-  };
 
   useEffect(() => {
     if (!activeTaskId && todayTasks.length > 0) {
@@ -51,7 +75,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, activeTa
   }, [activeTaskId, todayTasks, setActiveTaskId]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
       <div className="md:col-span-2">
         <Timer
           settings={settings}
@@ -73,23 +97,27 @@ const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, activeTa
           <h2 className="text-lg font-bold text-white mb-3">
             {activeTask ? 'Current Task' : 'No Active Task'}
           </h2>
-            {activeTask ? (
-              <>
-                <div className="p-4 rounded-lg bg-slate-700 border-l-4 border-cyan-400">
-                  <p className="font-bold text-xl text-white">{activeTask.title}</p>
-                  <p className="text-slate-300 mt-1">Estimated Pomodoros: {activeTask.pomodoros}</p>
-                </div>
-                <button
-                  onClick={handleCompleteTask}
-                  className="mt-3 w-full flex justify-center items-center space-x-2 bg-green-500 text-slate-900 font-bold p-2 rounded-lg hover:bg-green-400 transition-colors"
-                >
-                  Mark as Done
-                </button>
-              </>
-            ) : (
-               <p className="text-slate-400">Select a task from your 'To-Do Today' list to begin.</p>
-            )}
-          </div>
+
+          {activeTask ? (
+            <div className="p-4 rounded-lg bg-slate-700 border-l-4 border-cyan-400">
+              <p className="font-bold text-xl text-white">{activeTask.title}</p>
+              <p className="text-slate-300 mt-1">
+                Estimated Pomodoros: {activeTask.pomodoros}
+              </p>
+              <button
+                onClick={handleCompleteTask}
+                className="mt-3 px-3 py-1 text-sm rounded-full bg-cyan-500 text-slate-900 font-semibold hover:bg-cyan-400"
+              >
+                Complete Task
+              </button>
+            </div>
+          ) : (
+            <p className="text-slate-400">
+              Select a task from your 'To-Do Today' list to begin.
+            </p>
+          )}
+        </div>
+main
         <div className="p-4 bg-slate-800/50 rounded-2xl border border-slate-700/50 flex-grow">
           <h2 className="text-lg font-bold text-white mb-3">To-Do Today</h2>
           <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
@@ -108,7 +136,9 @@ const DashboardView: React.FC<DashboardViewProps> = ({ tasks, settings, activeTa
                 />
               ))
             ) : (
-              <p className="text-slate-400 text-center py-4">No tasks for today. Go to the Tasks page to add some!</p>
+              <p className="text-slate-400 text-center py-4">
+                No tasks for today. Go to the Tasks page to add some!
+              </p>
             )}
           </div>
         </div>
